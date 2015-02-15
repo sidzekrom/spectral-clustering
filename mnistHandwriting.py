@@ -123,7 +123,7 @@ def getAverage(numPics = 60000):
 # The meat of the problem. Returns the distance between two handwritten digits.
 # Right now it's Euclidean.
 
-def getDistance(V1, V2):
+def euclidDistance(V1, V2):
     distance = 0
     for i in range(0, len(V1)):
         distance += (V1[i]-V2[i])**2
@@ -136,7 +136,7 @@ def generateLaplacian(T):
     L = np.empty([len(T), len(T)])
     for i in range(0, len(T)):
         for j in range(0, i):
-            distance = getDistance(T[i][1], T[j][1])
+            distance = euclidDistance(T[i][1], T[j][1])
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
@@ -149,6 +149,9 @@ def generateLaplacian(T):
 
     return L
 
+# the idea is to subsample the data into many parts and use
+# each subsample to create a prediction model
+def generateSubsamples(T)
 
 def learn():
     dataPoints = MNISTexample(0, 100)
