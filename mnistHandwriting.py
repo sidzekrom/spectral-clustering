@@ -1,6 +1,7 @@
 from struct import *
 import numpy as np
 import sklearn
+from numpy import linalg as LA
 # This function reads data from the MNIST handwriting files.  To use this
 # you need to download the MNIST files from
 #    http://yann.lecun.com/exdb/mnist/
@@ -21,7 +22,7 @@ import sklearn
 # right.  The header information should look like what they talked about
 # on the website, and you can print those values in the function below
 # to make sure it looks like it is working.  If it seems messed up,
-# let Jeff know.
+# let Geoff know.
 #
 # Inputs to this function...
 #
@@ -131,14 +132,14 @@ def layerAllImages(T):
         average_image_vector.append(x)
     for i in range(0, 10):
         for k in range(0, 784):
-        pixel_weight = 0
+            pixel_weight = 0
             for j in range(0, len(A[i])):
-            pixel_weight += A[i][j][k]
+                pixel_weight += A[i][j][k]
         pixel_weight = pixel_weight / len(A[i])
         average_image_vector[i].append(pixel_weight)
     return_value = []
     for i in range(0, 10):
-    x = (average_image_vector[i], i)
+        x = (average_image_vector[i], i)
         return_value.append(x)
     return return_value
 
@@ -194,10 +195,30 @@ def generateSubsamples(T, size):
     numberOfSamples = len(T) / size
     laplaceList = []
     for i in range(0, numberOfSamples):
+        print i
         laplace = generateLaplacian(T[size*i : size*(i+1)])
         laplaceList.append(laplace)
     return laplaceList
 
+
+# This is the algorithm for spectral clustering
+# T is the data sample to learn from.
+# sampleSize is the size of the subsample that you
+# want to apply spectral clustering on.
+# The function below divides the data into
+# groups of size sampleSize and individually
+# applies the spectral clustering algorithm on each
+# one of them.
+def spectralClustering(T, sampleSize):
+    laplacianList = generateSubsamples(T, sampleSize)
+    eigenCollection = []
+    # this is the list of all subsampled Laplacians
+    for i in range(0, len(laplacianList)):
+        w, v = LA.eig(laplacianList[i])
+        # w is the list of eigenvalues of the matrix.
+        # and v comprises of the corresponding
+        # eigenvectors.
+        eigenCollection.append((w, v))
 
 def learn():
     dataPoints = MNISTexample(0, 100)
