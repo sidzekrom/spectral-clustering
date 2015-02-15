@@ -36,6 +36,7 @@ import numpy as np
 # is 0 or 1.  This makes the task simpler because we're only trying to
 # distinguish between two things instead of 10, meaning we won't need to
 # train as long to start getting good results.
+
 def MNISTexample(startN,howMany,bTrain=True):
     if bTrain:
         fImages = open('train-images.idx3-ubyte','rb')
@@ -102,6 +103,10 @@ def writeMNISTimage(T):
 # example of running the last function to write out some of the pictures.
 # writeMNISTimage(MNISTexample(0,100,only01=False))
 
+
+# Gets the averages of all the pictures and writes them to a picture for no reason.
+
+
 def getAverage(numPics = 60000):
     dataPoints = MNISTexample(0, numPics)
     r = []
@@ -113,9 +118,10 @@ def getAverage(numPics = 60000):
         r.append(S)
     writeMNISTimage([(r,0)])
 
-getAverage()
 
-# The meat of the problem:
+
+# The meat of the problem. Returns the distance between two handwritten digits.
+# Right now it's Euclidean.
 
 def getDistance(V1, V2):
     distance = 0
@@ -124,31 +130,13 @@ def getDistance(V1, V2):
 
     return distance**.5
 
-"""
+
+# returns the Laplacian of the given graph according to the distance function.
 def generateLaplacian(T):
     L = np.empty([len(T), len(T)])
     for i in range(0, len(T)):
         for j in range(0, i):
             distance = getDistance(T[i][1], T[j][1])
-            L[j][i] = -1*distance
-            L[i][j] = -1*distance
-        L[i][i] = 0
-
-    for i in range(0, len(T)):
-        summ = 0
-        for j in range(0, len(T)):
-            summ-=L[i][j]
-        L[i][i] = summ
-
-    return L
-
-"""
-def generateLaplacian(T):
-    L = np.empty([len(T), len(T)])
-    for i in range(0, len(T)):
-        for j in range(0, i):
-            distance = getDistance(T[i][1], T[j][1])
-            if()
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
@@ -163,8 +151,9 @@ def generateLaplacian(T):
 
 
 def learn():
-    dataPoints = MNISTexample(0, 1000)
+    dataPoints = MNISTexample(0, 100)
     laplacian = generateLaplacian(dataPoints)
+
     print("Done")
 
-#learn()
+learn()
