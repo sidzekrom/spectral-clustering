@@ -107,6 +107,41 @@ def writeMNISTimage(T):
 # Gets the averages of all the pictures and writes them to a picture for no reason.
 
 
+def get_index(L):
+    for i in range(0, 10):
+        if L[i] == 1:
+            return i
+
+def layerAllImages(T):
+    # creates clustered versions of images of digits from 1 to 10.
+    A = []
+    for i in range(0, 10):
+        x = []
+    A.append(x)
+    for k in range(0, 5000):
+        p = T[k] #the k-th digit
+    l = p[0] #the image exactly
+    m = get_index(p[1]) #the digit
+    A[m].append(l)
+    average_image_vector = []
+    for i in range(0, 10):
+        x = []
+        average_image_vector.append(x)
+    for i in range(0, 10):
+        for k in range(0, 784):
+        pixel_weight = 0
+            for j in range(0, len(A[i])):
+            pixel_weight += A[i][j][k]
+        pixel_weight = pixel_weight / len(A[i])
+        average_image_vector[i].append(pixel_weight)
+    return_value = []
+    for i in range(0, 10):
+    x = (average_image_vector[i], i)
+        return_value.append(x)
+    return return_value
+
+
+
 def getAverage(numPics = 60000):
     dataPoints = MNISTexample(0, numPics)
     r = []
