@@ -39,11 +39,11 @@ import numpy as np
 
 def MNISTexample(startN,howMany,bTrain=True):
     if bTrain:
-        fImages = open('train-images.idx3-ubyte','rb')
-        fLabels = open('train-labels.idx1-ubyte','rb')
+        fImages = open('train-images-idx3-ubyte','rb')
+        fLabels = open('train-labels-idx1-ubyte','rb')
     else:
-        fImages = open('t10k-images.idx3-ubyte','rb')
-        fLabels = open('t10k-labels.idx1-ubyte','rb')
+        fImages = open('t10k-images-idx3-ubyte','rb')
+        fLabels = open('t10k-labels-idx1-ubyte','rb')
 
     # read the header information in the images file.
     s1, s2, s3, s4 = fImages.read(4), fImages.read(4), fImages.read(4), fImages.read(4)
