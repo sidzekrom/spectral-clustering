@@ -1,5 +1,6 @@
 from struct import *
 import numpy as np
+import sklearn
 # This function reads data from the MNIST handwriting files.  To use this
 # you need to download the MNIST files from
 #    http://yann.lecun.com/exdb/mnist/
@@ -103,14 +104,15 @@ def writeMNISTimage(T):
 # example of running the last function to write out some of the pictures.
 # writeMNISTimage(MNISTexample(0,100,only01=False))
 
-
-# Gets the averages of all the pictures and writes them to a picture for no reason.
-
+# gets the index of 1 from a list
 
 def get_index(L):
     for i in range(0, 10):
         if L[i] == 1:
             return i
+
+# generates the average of all the pixels in an image for a given
+# digit. The corresponding image for each digit is in the repo.
 
 def layerAllImages(T):
     # creates clustered versions of images of digits from 1 to 10.
@@ -140,7 +142,8 @@ def layerAllImages(T):
         return_value.append(x)
     return return_value
 
-
+# Gets the averages of all the pictures and writes
+# them to a picture for no reason.
 
 def getAverage(numPics = 60000):
     dataPoints = MNISTexample(0, numPics)
@@ -186,7 +189,15 @@ def generateLaplacian(T):
 
 # the idea is to subsample the data into many parts and use
 # each subsample to create a prediction model
-def generateSubsamples(T)
+def generateSubsamples(T, size):
+    dataSize = len(T)
+    numberOfSamples = len(T) / size
+    laplaceList = []
+    for i in range(0, numberOfSamples):
+        laplace = generateLaplacian(T[size*i : size*(i+1)])
+        laplaceList.append(laplace)
+    return laplaceList
+
 
 def learn():
     dataPoints = MNISTexample(0, 100)
