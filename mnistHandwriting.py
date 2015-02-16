@@ -218,7 +218,10 @@ def spectralClustering(T, sampleSize):
         # w is the list of eigenvalues of the matrix.
         # and v comprises of the corresponding
         # eigenvectors.
-        eigenCollection.append((w, v))
+        eigenCollection.append(v)
+        return eigenCollection
+
+# k-means should be applied on eigencollection.
 
 def learn():
     dataPoints = MNISTexample(0, 100)
