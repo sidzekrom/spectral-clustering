@@ -176,7 +176,7 @@ def generateLaplacian(T):
     L = np.empty([len(T), len(T)])
     for i in range(0, len(T)):
         for j in range(0, i):
-            distance = np.exp(-5*(euclidDistance(T[i][0], T[j][0])))
+            distance = np.exp(-0.0005*(euclidDistance(T[i][0], T[j][0])))
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
@@ -216,10 +216,12 @@ def spectralClustering(T, sampleSize):
     # this is the list of all subsampled Laplacians
     for i in range(0, len(laplacianList)):
         w, v = LA.eig(laplacianList[i])
+        idx = w.argsort()
+        v = v[:, idx]
         # w is the list of eigenvalues of the matrix.
         # and v comprises of the corresponding
         # eigenvectors.
-        eigenCollection.append(v)
+        eigenCollection.append(v.tolist())
     return eigenCollection
 
 # k-means should be applied on eigencollection.
@@ -252,6 +254,8 @@ def kMeansIteration(points, clusterCenters, shouldReturn):
 def kMeans(points, numIterations, numClusters):
     #points = np.matrix.transpose(eigenVectors)
     dimension = len(points[0])
+    print(dimension)
+    print(len(points))
     #randomly generates cluster centers
     clusterCenters = [[random.random() for y in range(0, dimension)] for x in range(0, numClusters)]
 
@@ -259,13 +263,16 @@ def kMeans(points, numIterations, numClusters):
         kMeansIteration(points, clusterCenters, False)
     return kMeansIteration(points, clusterCenters, True)
 
-def learn():
+def learn(numClusters = 20):
     dataPoints = MNISTexample(0, 500)
     eigenvectors = spectralClustering(dataPoints, 100)
     clustered = []
-    print eigenvectors
-    for i in range(0, 5):
-        clustered.append(kMeans(eigenvectors[i], 50, 20))
+    for i in range(0, len(eigenvectors)):
+        for j in range(0, len(eigenvectors[i])):
+            eigenvectors[i][j] = eigenvectors[i][j][:numClusters]
+    #print eigenvectors
+    for i in range(0, 1):
+        clustered.append(kMeans(eigenvectors[i], 0, numClusters))
     return clustered
 
 a = learn()
