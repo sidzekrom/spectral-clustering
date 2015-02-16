@@ -63,7 +63,7 @@ def MNISTexample(startN,howMany,bTrain=True):
     numL = unpack('>I',fLabels.read(4))[0]
     fLabels.seek(8+startN)
 
-    T = [] # list of (input, correct label) pairs
+    digitInfoList = [] # list of (input, correct label) pairs
     
     for blah in range(0, howMany):
         # get the input from the image file
@@ -74,33 +74,35 @@ def MNISTexample(startN,howMany,bTrain=True):
 
         # get the correct label from the labels file.
         val = unpack('>B',fLabels.read(1))[0]
+        """
         y = []
         for i in range(0,10):
             if val==i: y.append(1)
             else: y.append(0)
+        """
 
-        T.append((x,y))
+        digitInfoList.append((x,val))
             
     fImages.close()
     fLabels.close()
 
-    return T
+    return digitInfoList
 
 # this function is not needed to do the training, but just in case you want
 # to see what one of the training images looks like.  this will take the
 # training data that was produced from the MNSTexample function and write
 # it out to a file that you can look at to see what the picture looks like.
 # It will write out a separate image for each thing in the training set.
-def writeMNISTimage(T):
+def writeMNISTimage(digitInfoList):
     # note that you need to have the Python Imaging Library installed to
     # run this function.  If you search for it online, you'll find it.
     import Image
-    for i in range(0, len(T)):
+    for i in range(0, len(digitInfoList)):
         im = Image.new('L',(28,28))
         pixels = im.load()
         for x in range(0,28):
             for y in range(0,28):
-                pixels[x,y] = int(T[i][0][x+y*28]*255)
+                pixels[x,y] = int(digitInfoList[i][0][x+y*28]*255)
         im.save('mnistFile'+str(i)+'.bmp')
 
 # example of running the last function to write out some of the pictures.
@@ -116,14 +118,14 @@ def get_index(L):
 # generates the average of all the pixels in an image for a given
 # digit. The corresponding image for each digit is in the repo.
 
-def layerAllImages(T):
+def layerAllImages(digitInfoList):
     # creates clustered versions of images of digits from 1 to 10.
     A = []
     for i in range(0, 10):
         x = []
     A.append(x)
     for k in range(0, 5000):
-        p = T[k] #the k-th digit
+        p = digitInfoList[k] #the k-th digit
     l = p[0] #the image exactly
     m = get_index(p[1]) #the digit
     A[m].append(l)
@@ -172,57 +174,23 @@ def euclidDistance(V1, V2):
 
 
 # returns the Laplacian of the given graph according to the distance function.
-def generateLaplacian(T):
-    L = np.empty([len(T), len(T)])
-    for i in range(0, len(T)):
+def generateLaplacian(digitInfoList):
+    L = np.empty([len(digitInfoList), len(digitInfoList)])
+    for i in range(0, len(digitInfoList)):
         for j in range(0, i):
-            distance = np.exp(-0.0005*(euclidDistance(T[i][0], T[j][0])))
+            distance = np.exp(-0.0005*(euclidDistance(digitInfoList[i][0], digitInfoList[j][0])))
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
 
-    for i in range(0, len(T)):
+    for i in range(0, len(digitInfoList)):
         summ = 0
-        for j in range(0, len(T)):
+        for j in range(0, len(digitInfoList)):
             summ-=L[i][j]
         L[i][i] = summ
 
     return L
 
-# the idea is to subsample the data into many parts and use
-# each subsample to create a prediction model
-def generateSubsamples(T, size):
-    dataSize = len(T)
-    numberOfSamples = len(T) / size
-    laplaceList = []
-    for i in range(0, numberOfSamples):
-        print i
-        laplace = generateLaplacian(T[size*i : size*(i+1)])
-        laplaceList.append(laplace)
-    return laplaceList
-
-
-# This is the algorithm for spectral clustering
-# T is the data sample to learn from.
-# sampleSize is the size of the subsample that you
-# want to apply spectral clustering on.
-# The function below divides the data into
-# groups of size sampleSize and individually
-# applies the spectral clustering algorithm on each
-# one of them.
-def spectralClustering(T, sampleSize):
-    laplacianList = generateSubsamples(T, sampleSize)
-    eigenCollection = []
-    # this is the list of all subsampled Laplacians
-    for i in range(0, len(laplacianList)):
-        w, v = LA.eig(laplacianList[i])
-        idx = w.argsort()
-        v = v[:, idx]
-        # w is the list of eigenvalues of the matrix.
-        # and v comprises of the corresponding
-        # eigenvectors.
-        eigenCollection.append(v.tolist())
-    return eigenCollection
 
 # k-means should be applied on eigencollection.
 def kMeansIteration(points, clusterCenters, shouldReturn):
@@ -258,30 +226,66 @@ def kMeansIteration(points, clusterCenters, shouldReturn):
             newCenter[coordinate] /= len(pointPartitions[centerIndex])
         clusterCenters[centerIndex] = newCenter
 
-def kMeans(points, numIterations, numClusters):
+def kMeans(points, numIterations, numClusters, randRange):
     #points = np.matrix.transpose(eigenVectors)
     dimension = len(points[0])
-    print(dimension)
-    print(len(points))
+    #print(dimension)
+    #print(len(points))
     #randomly generates cluster centers
-    clusterCenters = [[random.random() for y in range(0, dimension)] for x in range(0, numClusters)]
+    clusterCenters = [[random.uniform(randRange[0], randRange[1]) for y in range(0, dimension)] for x in range(0, numClusters)]
 
     for x in range(0, numIterations):
         #print(clusterCenters)
         kMeansIteration(points, clusterCenters, False)
     return kMeansIteration(points, clusterCenters, True)
 
-def learn(numClusters = 20):
-    dataPoints = MNISTexample(0, 500)
-    eigenvectors = spectralClustering(dataPoints, 100)
-    clustered = []
-    for i in range(0, len(eigenvectors)):
-        for j in range(0, len(eigenvectors[i])):
-            eigenvectors[i][j] = eigenvectors[i][j][:numClusters]
-    #print eigenvectors
-    for i in range(0, 1):
-        clustered.append(kMeans(eigenvectors[i], 50, numClusters))
-    return clustered
+"""
+# the idea is to subsample the data into many parts and use
+# each subsample to create a prediction model
+def generateSubsamples(digitInfoList, size):
+    dataSize = len(digitInfoList)
+    numberOfSamples = len(digitInfoList) / size
+    laplaceList = []
+    for i in range(0, numberOfSamples):
+        print i
+        laplace = generateLaplacian(digitInfoList[size*i : size*(i+1)])
+        laplaceList.append(laplace)
+    return laplaceList
+"""
 
-a = learn()
-print a
+# This is the algorithm for spectral clustering
+# digitInfoList is the data sample to learn from.
+
+def spectralClustering(digitInfoList, numClusters):
+    laplacian = generateLaplacian(digitInfoList)
+
+    # this is the list of all subsampled Laplacians
+    w, v = LA.eig(laplacian)
+    idx = w.argsort()
+    v = v[:, idx]
+    # w is the list of eigenvalues of the matrix.
+    # and v comprises of the corresponding
+    # eigenvectors.
+    # We now convert matrix v into a 2D list for easier handling later.
+    v = v.tolist()
+    # Only take the first eigenvectors, depending on numClusters
+    for i in range(0, len(v)):
+        v[i] = v[i][:numClusters]
+    # Now, do KMeans on this list
+    clusters = kMeans(v, 50, numClusters, (-.15, .15))
+
+    #Convert every index of the cluster back to the proper digit
+    for cluster in clusters:
+        for index in range(0, len(cluster)):
+            cluster[index] = digitInfoList[cluster[index]][1]
+    return clusters
+
+def learn(sampleSize, numSamples):
+
+    dataPoints = MNISTexample(0, sampleSize*numSamples)
+    #print(dataPoints)
+    for i in range(0, numSamples):
+        print(spectralClustering(dataPoints[i*sampleSize:(i+1)*sampleSize], 20))
+
+
+learn(300, 1)
