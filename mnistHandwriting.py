@@ -226,16 +226,23 @@ def spectralClustering(T, sampleSize):
 
 # k-means should be applied on eigencollection.
 def kMeansIteration(points, clusterCenters, shouldReturn):
-    pointPartitions = [[] for y in range(0, len(clusterCenters))] # begin partitioning the points
+    # Partition the points based on which center each is closest to.
+    # pointPartitions is a list of each of the new partitions, which themselves are lists.
+    #print("Points:", points)
+    #print("ClusterCenters", clusterCenters)
+    pointPartitions = [[] for y in range(0, len(clusterCenters))] 
+    # This loop iterates over every point
     for pointIndex in range(0, len(points)):
-        minDistance = 0
-        minIndex = -1
-        for centerIndex in range(0, len(clusterCenters)):
+        minDistance = euclidDistance(points[pointIndex], clusterCenters[0])
+        minIndex = 0
+        # This loop finds the nearest cluster center to the point at pointIndex
+        for centerIndex in range(1, len(clusterCenters)):
             distance = euclidDistance(points[pointIndex], clusterCenters[centerIndex])
             if(distance<minDistance):
                 minDistance = distance
                 minIndex = centerIndex
         pointPartitions[minIndex].append(pointIndex)
+    #print(pointPartitions)
     if(shouldReturn):
         return pointPartitions
 
@@ -260,6 +267,7 @@ def kMeans(points, numIterations, numClusters):
     clusterCenters = [[random.random() for y in range(0, dimension)] for x in range(0, numClusters)]
 
     for x in range(0, numIterations):
+        #print(clusterCenters)
         kMeansIteration(points, clusterCenters, False)
     return kMeansIteration(points, clusterCenters, True)
 
@@ -272,7 +280,7 @@ def learn(numClusters = 20):
             eigenvectors[i][j] = eigenvectors[i][j][:numClusters]
     #print eigenvectors
     for i in range(0, 1):
-        clustered.append(kMeans(eigenvectors[i], 0, numClusters))
+        clustered.append(kMeans(eigenvectors[i], 50, numClusters))
     return clustered
 
 a = learn()
