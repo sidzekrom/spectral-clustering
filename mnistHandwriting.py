@@ -2,6 +2,7 @@ from struct import *
 import numpy as np
 import sklearn
 from numpy import linalg as LA
+import random
 # This function reads data from the MNIST handwriting files.  To use this
 # you need to download the MNIST files from
 #    http://yann.lecun.com/exdb/mnist/
@@ -78,7 +79,7 @@ def MNISTexample(startN,howMany,bTrain=True):
             if val==i: y.append(1)
             else: y.append(0)
 
-        T.append((blah,x,y))
+        T.append((x,y))
             
     fImages.close()
     fLabels.close()
@@ -152,7 +153,7 @@ def getAverage(numPics = 60000):
     for x in range(0, 784):
         S = 0
         for y in dataPoints:
-            S+=y[1][x]
+            S+=y[0][x]
         S/=numPics
         r.append(S)
     writeMNISTimage([(r,0)])
@@ -175,7 +176,7 @@ def generateLaplacian(T):
     L = np.empty([len(T), len(T)])
     for i in range(0, len(T)):
         for j in range(0, i):
-            distance = np.exp(-5*(euclidDistance(T[i][1], T[j][1])))
+            distance = np.exp(-5*(euclidDistance(T[i][0], T[j][0])))
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
@@ -223,8 +224,8 @@ def spectralClustering(T, sampleSize):
 
 # k-means should be applied on eigencollection.
 def kMeansIteration(points, clusterCenters, shouldReturn):
-    pointPartitions = [[] for y in range(0, clusterCenters)] # begin partitioning the points
-    for pointIndex in range(0, points):
+    pointPartitions = [[] for y in range(0, len(clusterCenters))] # begin partitioning the points
+    for pointIndex in range(0, len(points)):
         minDistance = 0
         minIndex = -1
         for centerIndex in range(0, len(clusterCenters)):
@@ -239,6 +240,8 @@ def kMeansIteration(points, clusterCenters, shouldReturn):
     # update the cluster centers
     dimension = len(clusterCenters[0])
     for centerIndex in range(0, len(clusterCenters)):
+        if(len(pointPartitions[centerIndex])==0):
+            continue
         newCenter = [0 for y in range(0, dimension)]
         for coordinate in range(0, dimension):
             for pointIndex in pointPartitions[centerIndex]:
@@ -250,18 +253,20 @@ def kMeans(points, numIterations, numClusters):
     #points = np.matrix.transpose(eigenVectors)
     dimension = len(points[0])
     #randomly generates cluster centers
-    clusterCenters = [[random() for y in range(0, dimension)] for x in range(0, numClusters)]
+    clusterCenters = [[random.random() for y in range(0, dimension)] for x in range(0, numClusters)]
 
     for x in range(0, numIterations):
-        kMeansIteration(points, clusterCenters, false)
-    return kMeansIteration(points, clusterCenters, true)
+        kMeansIteration(points, clusterCenters, False)
+    return kMeansIteration(points, clusterCenters, True)
 
 def learn():
-    dataPoints = MNISTexample(0, 6000)
-    laplacian = generateLaplacian(dataPoints)
-    eigenvectors = spectralClustering(laplacian, 1000)
-    for i in range(0, 6):
-        kMeans(eigenvectors[i], 50, 20)
+    dataPoints = MNISTexample(0, 500)
+    eigenvectors = spectralClustering(dataPoints, 100)
+    clustered = []
+    print eigenvectors
+    for i in range(0, 5):
+        clustered.append(kMeans(eigenvectors[i], 50, 20))
+    return clustered
 
-
-learn()
+a = learn()
+print a
