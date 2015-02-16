@@ -220,7 +220,7 @@ def spectralClustering(T, sampleSize):
         # and v comprises of the corresponding
         # eigenvectors.
         eigenCollection.append(v)
-        return eigenCollection
+    return eigenCollection
 
 # k-means should be applied on eigencollection.
 def kMeansIteration(points, clusterCenters, shouldReturn):
