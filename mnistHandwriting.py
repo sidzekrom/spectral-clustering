@@ -160,14 +160,14 @@ def getAverage(numPics = 60000):
 
 
 # The meat of the problem. Returns the distance between two handwritten digits.
-# Right now it's Euclidean.
+# Right now it's Euclidean squared.
 
 def euclidDistance(V1, V2):
     distance = 0
     for i in range(0, len(V1)):
         distance += (V1[i]-V2[i])**2
 
-    return np.exp(-5 * distance)
+    return distance
 
 
 # returns the Laplacian of the given graph according to the distance function.
@@ -175,7 +175,7 @@ def generateLaplacian(T):
     L = np.empty([len(T), len(T)])
     for i in range(0, len(T)):
         for j in range(0, i):
-            distance = euclidDistance(T[i][1], T[j][1])
+            distance = np.exp(-5*(euclidDistance(T[i][1], T[j][1])))
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
@@ -222,6 +222,40 @@ def spectralClustering(T, sampleSize):
         return eigenCollection
 
 # k-means should be applied on eigencollection.
+def kMeansIteration(points, clusterCenters):
+    pointPartitions = [[] for y in range(0, clusterCenters)] # begin partitioning the points
+    for pointIndex in range(0, points):
+        minDistance = 0
+        minIndex = -1
+        for centerIndex in range(0, len(clusterCenters)):
+            distance = euclidDistance(points[pointIndex], clusterCenters[centerIndex])
+            if(distance<minDistance):
+                minDistance = distance
+                minIndex = centerIndex
+        pointPartitions[minIndex].append(pointIndex)
+
+    # update the cluster centers
+    dimension = len(clusterCenters[0])
+    for centerIndex in range(0, len(clusterCenters)):
+        newCenter = [0 for y in range(0, dimension)]
+        for coordinate in range(0, dimension):
+            for pointIndex in pointPartitions[centerIndex]:
+                newCenter[coordinate] += points[pointIndex][coordinate]
+            newCenter[coordinate] /= len(pointPartitions[centerIndex])
+        clusterCenters[centerIndex] = newCenter
+
+
+
+def kMeans(points, numIterations, numClusters):
+    #points = np.matrix.transpose(eigenVectors)
+    dimension = len(points[0])
+    #randomly generates cluster centers
+    clusterCenters = [[random() for y in range(0, dimension)] for x in range(0, numClusters)]
+
+    for x in range(0, numIterations):
+        kMeansIteration(points, clusterCenters)
+    
+
 
 def learn():
     dataPoints = MNISTexample(0, 100)
