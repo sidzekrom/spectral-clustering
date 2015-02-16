@@ -167,7 +167,7 @@ def euclidDistance(V1, V2):
     for i in range(0, len(V1)):
         distance += (V1[i]-V2[i])**2
 
-    return distance**.5
+    return np.exp(-5 * distance)
 
 
 # returns the Laplacian of the given graph according to the distance function.
