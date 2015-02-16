@@ -2,6 +2,7 @@ from struct import *
 import numpy as np
 import sklearn
 from numpy import linalg as LA
+from sklearn.cluster import KMeans as kmeans
 import random
 # This function reads data from the MNIST handwriting files.  To use this
 # you need to download the MNIST files from
@@ -168,7 +169,7 @@ def getAverage(numPics = 60000):
 def euclidDistance(V1, V2):
     distance = 0
     for i in range(0, len(V1)):
-        distance += (V1[i]-V2[i])**2
+        distance += (V1[i]-V2[i]) ** 2
 
     return distance
 
@@ -178,7 +179,7 @@ def generateLaplacian(digitInfoList):
     L = np.empty([len(digitInfoList), len(digitInfoList)])
     for i in range(0, len(digitInfoList)):
         for j in range(0, i):
-            distance = np.exp(-0.0005*(euclidDistance(digitInfoList[i][0], digitInfoList[j][0])))
+            distance = np.exp(-0.5*(euclidDistance(digitInfoList[i][0], digitInfoList[j][0])))
             L[j][i] = -1*distance
             L[i][j] = -1*distance
         L[i][i] = 0
@@ -263,6 +264,13 @@ def spectralClustering(digitInfoList, numClusters):
     w, v = LA.eig(laplacian)
     idx = w.argsort()
     v = v[:, idx]
+    for i in range(0, len(v)):
+        for j in range(0, len(v[i])):
+            if v[i][j] < 1.0 / (len(v[i]) ** 0.5):
+                v[i][j] = 0
+            else:
+                v[i][j] = 7 * v[i][j]
+
     # w is the list of eigenvalues of the matrix.
     # and v comprises of the corresponding
     # eigenvectors.
@@ -272,12 +280,14 @@ def spectralClustering(digitInfoList, numClusters):
     for i in range(0, len(v)):
         v[i] = v[i][:numClusters]
     # Now, do KMeans on this list
-    clusters = kMeans(v, 50, numClusters, (-.15, .15))
+    clusters = kMeans(v, 50, numClusters, (-0.15, 0.15))
+    #clusters = sklearn.cluster.k_means(v, numClusters)
 
     #Convert every index of the cluster back to the proper digit
     for cluster in clusters:
-        for index in range(0, len(cluster)):
-            cluster[index] = digitInfoList[cluster[index]][1]
+        for gon in range(0, len(cluster)):
+            cluster[gon] = digitInfoList[cluster[gon]][1]
+
     return clusters
 
 def learn(sampleSize, numSamples):
@@ -285,7 +295,7 @@ def learn(sampleSize, numSamples):
     dataPoints = MNISTexample(0, sampleSize*numSamples)
     #print(dataPoints)
     for i in range(0, numSamples):
-        print(spectralClustering(dataPoints[i*sampleSize:(i+1)*sampleSize], 20))
+        print(spectralClustering(dataPoints[i*sampleSize:(i+1)*sampleSize], 100))
 
 
 learn(300, 1)
