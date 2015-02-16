@@ -222,7 +222,7 @@ def spectralClustering(T, sampleSize):
         return eigenCollection
 
 # k-means should be applied on eigencollection.
-def kMeansIteration(points, clusterCenters):
+def kMeansIteration(points, clusterCenters, shouldReturn):
     pointPartitions = [[] for y in range(0, clusterCenters)] # begin partitioning the points
     for pointIndex in range(0, points):
         minDistance = 0
@@ -233,6 +233,8 @@ def kMeansIteration(points, clusterCenters):
                 minDistance = distance
                 minIndex = centerIndex
         pointPartitions[minIndex].append(pointIndex)
+    if(shouldReturn):
+        return pointPartitions
 
     # update the cluster centers
     dimension = len(clusterCenters[0])
@@ -244,8 +246,6 @@ def kMeansIteration(points, clusterCenters):
             newCenter[coordinate] /= len(pointPartitions[centerIndex])
         clusterCenters[centerIndex] = newCenter
 
-
-
 def kMeans(points, numIterations, numClusters):
     #points = np.matrix.transpose(eigenVectors)
     dimension = len(points[0])
@@ -253,14 +253,15 @@ def kMeans(points, numIterations, numClusters):
     clusterCenters = [[random() for y in range(0, dimension)] for x in range(0, numClusters)]
 
     for x in range(0, numIterations):
-        kMeansIteration(points, clusterCenters)
-    
-
+        kMeansIteration(points, clusterCenters, false)
+    return kMeansIteration(points, clusterCenters, true)
 
 def learn():
-    dataPoints = MNISTexample(0, 100)
+    dataPoints = MNISTexample(0, 6000)
     laplacian = generateLaplacian(dataPoints)
+    eigenvectors = spectralClustering(laplacian, 1000)
+    for i in range(0, 6):
+        kMeans(eigenvectors[i], 50, 20)
 
-    print("Done")
 
 learn()
